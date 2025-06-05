@@ -6,6 +6,7 @@ using UnityEditor;
 #endif
 
 [System.Serializable]
+[AddComponentMenu("ChiseNote/Font Texture Generator")]
 public class FontTextureGenerator : MonoBehaviour
 {
     [Header("Font Settings")]
@@ -21,7 +22,9 @@ public class FontTextureGenerator : MonoBehaviour
     [Header("Texture Settings")]
     [SerializeField] private int baseTextureWidth = 1280; // 基本の横幅
     [SerializeField] private int textureHeight = 256; // テクスチャの高さ
-    [SerializeField] private string outputPath = "Assets/Textures/NumberTexture.png";
+    [SerializeField] private DefaultAsset outputFolder; // 出力フォルダ（D&D用）
+    [SerializeField] private string outputFolderPath = "Assets/Textures"; // 出力フォルダパス
+    [SerializeField] private string outputFileName = "NumberTexture"; // ファイル名（拡張子なし）
 
     [Header("Preview")]
     [SerializeField] private Texture2D generatedTexture;
@@ -37,12 +40,12 @@ public class FontTextureGenerator : MonoBehaviour
             return;
         }
 
-        Texture2D texture = CreateNumberTexture();
-        if (texture != null)
+        Texture2D texture = CreateNumberTexture();        if (texture != null)
         {
             generatedTexture = texture;
             SaveTexture(texture);
-            Debug.Log("Number texture generated successfully at: " + outputPath);
+            string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png");
+            Debug.Log("Number texture generated successfully at: " + fullOutputPath);
         }
         else
         {
@@ -169,20 +172,20 @@ public class FontTextureGenerator : MonoBehaviour
         DestroyImmediate(renderTexture);
         
         return texture;
-    }
-
-    private void SaveTexture(Texture2D texture)
+    }    private void SaveTexture(Texture2D texture)
     {
+        // 出力パスを結合（拡張子を自動追加）
+        string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png");
         byte[] pngData = texture.EncodeToPNG();
 
         // Ensure directory exists
-        string directory = Path.GetDirectoryName(outputPath);
+        string directory = Path.GetDirectoryName(fullOutputPath);
         if (!Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
-        File.WriteAllBytes(outputPath, pngData);
+        File.WriteAllBytes(fullOutputPath, pngData);
 
 #if UNITY_EDITOR
         AssetDatabase.Refresh();
@@ -252,131 +255,195 @@ public class FontTextureGenerator : MonoBehaviour
         return texture;
     }
 }
-
 #if UNITY_EDITOR
 [CustomEditor(typeof(FontTextureGenerator))]
 public class FontTextureGeneratorEditor : Editor
 {
     public override void OnInspectorGUI()
     {
+        serializedObject.Update();
         FontTextureGenerator generator = (FontTextureGenerator)target;
 
-        // Font Asset D&D field
-        EditorGUILayout.LabelField("Font Settings", EditorStyles.boldLabel);
-        EditorGUI.BeginChangeCheck();
-        Font newFontAsset = (Font)EditorGUILayout.ObjectField("Font Asset (D&D)",
-            serializedObject.FindProperty("fontAsset").objectReferenceValue,
-            typeof(Font), false);
+        EditorGUILayout.Space(10);
+        
+        // Title with center alignment
+        GUIStyle titleStyle = new GUIStyle(EditorStyles.boldLabel);
+        titleStyle.fontSize = 24;
+        titleStyle.alignment = TextAnchor.MiddleCenter;
+        titleStyle.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
+        
+        EditorGUILayout.LabelField("Font Texture Generator", titleStyle);
+        EditorGUILayout.Space(10);
 
-        if (EditorGUI.EndChangeCheck())
-        {
-            serializedObject.FindProperty("fontAsset").objectReferenceValue = newFontAsset;
+        // Font Settings
+        DrawSection("Font Settings", () => {
+            EditorGUI.BeginChangeCheck();
+            Font newFontAsset = (Font)EditorGUILayout.ObjectField("Font Asset",
+                serializedObject.FindProperty("fontAsset").objectReferenceValue,
+                typeof(Font), false);
 
-            // フォントアセットが設定された場合、パスも自動更新
-            if (newFontAsset != null)
+            if (EditorGUI.EndChangeCheck())
             {
-                string assetPath = AssetDatabase.GetAssetPath(newFontAsset);
-                serializedObject.FindProperty("fontPath").stringValue = assetPath;
+                serializedObject.FindProperty("fontAsset").objectReferenceValue = newFontAsset;
+                if (newFontAsset != null)
+                {
+                    string assetPath = AssetDatabase.GetAssetPath(newFontAsset);
+                    serializedObject.FindProperty("fontPath").stringValue = assetPath;
+                }
+                serializedObject.ApplyModifiedProperties();
             }
 
-            serializedObject.ApplyModifiedProperties();
-        }
-
-        // Show font path as read-only when font asset is set
-        Font currentFontAsset = serializedObject.FindProperty("fontAsset").objectReferenceValue as Font;
-        if (currentFontAsset != null)
-        {
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.TextField("Font Path", serializedObject.FindProperty("fontPath").stringValue);
-            EditorGUI.EndDisabledGroup();
-        }
-        else
-        {
-            // Show editable font path when no font asset is set
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("fontPath"));
-        }
-
-        // Draw other properties
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("fontSize"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("textColor"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("backgroundColor"));
-
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Spacing Settings", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("characterSpacing"));
-
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Texture Settings", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("baseTextureWidth"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("textureHeight"));
-
-        // Show calculated final width
-        SerializedProperty baseWidthProp = serializedObject.FindProperty("baseTextureWidth");
-        SerializedProperty spacingProp = serializedObject.FindProperty("characterSpacing");
-        int finalWidth = baseWidthProp.intValue + (spacingProp.intValue * 20); // 10 characters * 2 sides each
-        
-        EditorGUI.BeginDisabledGroup(true);
-        EditorGUILayout.IntField("Final Texture Width", finalWidth);
-        EditorGUI.EndDisabledGroup();
-
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("outputPath"));
-
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("generatedTexture"));
-
-        serializedObject.ApplyModifiedProperties();
-
-        GUILayout.Space(10);
-
-        if (GUILayout.Button("Generate Number Texture", GUILayout.Height(30)))
-        {
-            generator.GenerateNumberTexture();
-        }
-
-        GUILayout.Space(5);
-
-        // Show font file selector only when no font asset is set
-        if (currentFontAsset == null)
-        {
-            if (GUILayout.Button("Select Font File"))
+            Font currentFontAsset = serializedObject.FindProperty("fontAsset").objectReferenceValue as Font;
+            if (currentFontAsset != null)
             {
-                string path = EditorUtility.OpenFilePanel("Select TTF Font", "Assets", "ttf");
-                if (!string.IsNullOrEmpty(path))
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.TextField("Font Path", serializedObject.FindProperty("fontPath").stringValue);
+                EditorGUI.EndDisabledGroup();
+            }
+            else
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("fontPath"), new GUIContent("Font Path"));
+                if (GUILayout.Button("Browse Font File", GUILayout.Height(25)))
                 {
-                    if (path.StartsWith(Application.dataPath))
+                    string path = EditorUtility.OpenFilePanel("Select TTF Font", "Assets", "ttf");
+                    if (!string.IsNullOrEmpty(path))
                     {
-                        path = "Assets" + path.Substring(Application.dataPath.Length);
-                        var fontPathProperty = serializedObject.FindProperty("fontPath");
-                        fontPathProperty.stringValue = path;
-                        serializedObject.ApplyModifiedProperties();
+                        if (path.StartsWith(Application.dataPath))
+                        {
+                            path = "Assets" + path.Substring(Application.dataPath.Length);
+                            serializedObject.FindProperty("fontPath").stringValue = path;
+                            serializedObject.ApplyModifiedProperties();
+                        }
+                        else
+                        {
+                            EditorUtility.DisplayDialog("Invalid Path", "Please select a font file within the Assets folder.", "OK");
+                        }
+                    }
+                }
+            }            EditorGUILayout.PropertyField(serializedObject.FindProperty("fontSize"), new GUIContent("Font Size"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("textColor"), new GUIContent("Text Color"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("backgroundColor"), new GUIContent("Background Color"));        });
+
+        // Spacing Settings
+        DrawSection("Spacing Settings", () => {
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("characterSpacing"), new GUIContent("Character Spacing (px)"));
+        });
+
+        // Texture Settings
+        DrawSection("Texture Settings", () => {
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("baseTextureWidth"), new GUIContent("Base Width"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("textureHeight"), new GUIContent("Height"));
+
+            // Show calculated final width
+            SerializedProperty baseWidthProp = serializedObject.FindProperty("baseTextureWidth");
+            SerializedProperty spacingProp = serializedObject.FindProperty("characterSpacing");
+            int finalWidth = baseWidthProp.intValue + (spacingProp.intValue * 20);
+            
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.IntField("Final Width (calculated)", finalWidth);
+            EditorGUI.EndDisabledGroup();
+        });
+
+        // Output Settings
+        DrawSection("Output Settings", () => {
+            // Output Folder D&D
+            EditorGUI.BeginChangeCheck();
+            DefaultAsset newOutputFolder = (DefaultAsset)EditorGUILayout.ObjectField("Output Folder",
+                serializedObject.FindProperty("outputFolder").objectReferenceValue,
+                typeof(DefaultAsset), false);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.FindProperty("outputFolder").objectReferenceValue = newOutputFolder;
+                if (newOutputFolder != null)
+                {
+                    string assetPath = AssetDatabase.GetAssetPath(newOutputFolder);
+                    if (AssetDatabase.IsValidFolder(assetPath))
+                    {
+                        serializedObject.FindProperty("outputFolderPath").stringValue = assetPath;
                     }
                     else
                     {
-                        EditorUtility.DisplayDialog("Invalid Path", "Please select a font file within the Assets folder.", "OK");
+                        EditorUtility.DisplayDialog("Invalid Folder", "Please select a valid folder.", "OK");
+                        serializedObject.FindProperty("outputFolder").objectReferenceValue = null;
                     }
                 }
-            }
-        }
-
-        if (GUILayout.Button("Select Output Path"))
-        {
-            string path = EditorUtility.SaveFilePanel("Save Texture", "Assets", "NumberTexture", "png");
-            if (!string.IsNullOrEmpty(path))
+                serializedObject.ApplyModifiedProperties();
+            }            // Show folder path (read-only if D&D folder is set)
+            DefaultAsset currentOutputFolder = serializedObject.FindProperty("outputFolder").objectReferenceValue as DefaultAsset;
+            if (currentOutputFolder != null)
             {
-                if (path.StartsWith(Application.dataPath))
-                {
-                    path = "Assets" + path.Substring(Application.dataPath.Length);
-                    var outputPathProperty = serializedObject.FindProperty("outputPath");
-                    outputPathProperty.stringValue = path;
-                    serializedObject.ApplyModifiedProperties();
-                }
-                else
-                {
-                    EditorUtility.DisplayDialog("Invalid Path", "Please select a path within the Assets folder.", "OK");
-                }
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.TextField("Folder Path", serializedObject.FindProperty("outputFolderPath").stringValue);
+                EditorGUI.EndDisabledGroup();
             }
+            else
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("outputFolderPath"), new GUIContent("Folder Path"));
+            }
+            
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("outputFileName"), new GUIContent("File Name (without extension)"));
+            
+            // Show full output path
+            string fullPath = Path.Combine(serializedObject.FindProperty("outputFolderPath").stringValue, 
+                                         serializedObject.FindProperty("outputFileName").stringValue + ".png");
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.TextField("Full Output Path", fullPath);
+            EditorGUI.EndDisabledGroup();
+        });
+
+        // Preview Section
+        DrawSection("Preview", () => {
+            SerializedProperty textureProp = serializedObject.FindProperty("generatedTexture");
+            if (textureProp.objectReferenceValue != null)
+            {
+                Texture2D texture = (Texture2D)textureProp.objectReferenceValue;
+                float aspectRatio = (float)texture.width / texture.height;
+                float maxWidth = EditorGUIUtility.currentViewWidth - 40;
+                float width = Mathf.Min(maxWidth, texture.width);
+                float height = width / aspectRatio;
+                
+                Rect rect = GUILayoutUtility.GetRect(width, height);
+                EditorGUI.DrawPreviewTexture(rect, texture);
+                
+                EditorGUILayout.LabelField($"Size: {texture.width} x {texture.height}", EditorStyles.miniLabel);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("No texture generated yet. Click 'Generate' to create texture.", MessageType.Info);
+            }
+        });
+
+        serializedObject.ApplyModifiedProperties();
+
+        EditorGUILayout.Space(10);
+
+        // Generate Button
+        GUI.backgroundColor = Color.green;
+        if (GUILayout.Button("Generate Number Texture", GUILayout.Height(40)))
+        {
+            generator.GenerateNumberTexture();
         }
+        GUI.backgroundColor = Color.white;
+    }
+
+    private void DrawSection(string title, System.Action content)
+    {
+        EditorGUILayout.Space(5);
+        
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        
+        GUIStyle titleStyle = new GUIStyle(EditorStyles.boldLabel);
+        titleStyle.fontSize = 11;
+        EditorGUILayout.LabelField(title, titleStyle);
+        
+        EditorGUILayout.Space(3);
+        
+        EditorGUI.indentLevel++;
+        content();
+        EditorGUI.indentLevel--;
+        
+        EditorGUILayout.EndVertical();
     }
 }
 #endif
