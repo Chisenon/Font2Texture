@@ -8,23 +8,22 @@ using UnityEditor;
 [System.Serializable]
 [AddComponentMenu("ChiseNote/Font Texture Generator")]
 public class FontTextureGenerator : MonoBehaviour
-{
-    [Header("Font Settings")]
-    [SerializeField] private Font fontAsset; // D&D用のフォントアセット
+{    [Header("Font Settings")]
+    [SerializeField] private Font fontAsset;
     [SerializeField] private string fontPath = "Assets/Fonts/YourFont.ttf";
     [SerializeField] private int fontSize = 128;
     [SerializeField] private Color textColor = Color.white;
     [SerializeField] private Color backgroundColor = Color.clear;
 
     [Header("Spacing Settings")]
-    [SerializeField] private int characterSpacing = 0; // 文字間のスペーシング（ピクセル）
+    [SerializeField] private int characterSpacing = 0;
 
     [Header("Texture Settings")]
-    [SerializeField] private int baseTextureWidth = 1280; // 基本の横幅
-    [SerializeField] private int textureHeight = 256; // テクスチャの高さ
-    [SerializeField] private DefaultAsset outputFolder; // 出力フォルダ（D&D用）
-    [SerializeField] private string outputFolderPath = "Assets/Textures"; // 出力フォルダパス
-    [SerializeField] private string outputFileName = "NumberTexture"; // ファイル名（拡張子なし）
+    [SerializeField] private int baseTextureWidth = 1280;
+    [SerializeField] private int textureHeight = 256;
+    [SerializeField] private DefaultAsset outputFolder;
+    [SerializeField] private string outputFolderPath = "Assets/Textures";
+    [SerializeField] private string outputFileName = "NumberTexture";
 
     [Header("Preview")]
     [SerializeField] private Texture2D generatedTexture;
@@ -51,75 +50,57 @@ public class FontTextureGenerator : MonoBehaviour
         {
             Debug.LogError("Failed to generate number texture");
         }
-    }
-
-    private bool LoadFont()
+    }    private bool LoadFont()
     {
-        // 優先的にD&DされたフォントアセットをMESウィンドウに使用
         if (fontAsset != null)
         {
             loadedFont = fontAsset;
             return true;
         }
 
-        // フォントアセットが設定されていない場合は従来のパス方式を使用
         if (!File.Exists(fontPath))
         {
             Debug.LogError("Font file not found: " + fontPath);
             return false;
         }
 
-        // Load font from Resources or StreamingAssets
         string resourcePath = fontPath.Replace("Assets/Resources/", "").Replace(".ttf", "");
         loadedFont = Resources.Load<Font>(resourcePath);
 
         if (loadedFont == null)
         {
-            // Try loading as asset
 #if UNITY_EDITOR
             loadedFont = AssetDatabase.LoadAssetAtPath<Font>(fontPath);
 #endif
         }
 
         return loadedFont != null;
-    }
-
-    private Texture2D CreateNumberTexture()
+    }    private Texture2D CreateNumberTexture()
     {
-        // Calculate final texture width with spacing on both sides of each character
-        int finalTextureWidth = baseTextureWidth + (characterSpacing * 20); // 10 characters * 2 sides each
+        int finalTextureWidth = baseTextureWidth + (characterSpacing * 20);
         
-        // Create render texture
         RenderTexture renderTexture = new RenderTexture(finalTextureWidth, textureHeight, 24);
         RenderTexture previousActive = RenderTexture.active;
         RenderTexture.active = renderTexture;
         
-        // Clear with background color
         GL.Clear(true, true, backgroundColor);
         
-        // Create texture to read pixels into
         Texture2D texture = new Texture2D(finalTextureWidth, textureHeight, TextureFormat.RGBA32, false);
         
-        // Calculate character width (excluding spacing)
-        float charWidth = (float)baseTextureWidth / 10.0f;
-        
-        // Create GUI style for text rendering
+        float charWidth = (float)baseTextureWidth / 10.0f;        
         GUIStyle textStyle = new GUIStyle();
         textStyle.font = loadedFont;
         textStyle.fontSize = fontSize;
         textStyle.normal.textColor = textColor;
         textStyle.alignment = TextAnchor.MiddleCenter;
         
-        // Use OnGUI-like rendering with Graphics.DrawTexture approach
         Camera tempCamera = new GameObject("TempCamera").AddComponent<Camera>();
         tempCamera.targetTexture = renderTexture;
         tempCamera.clearFlags = CameraClearFlags.SolidColor;
         tempCamera.backgroundColor = backgroundColor;
         tempCamera.orthographic = true;
-        tempCamera.orthographicSize = textureHeight / 2f;
-        tempCamera.transform.position = new Vector3(finalTextureWidth / 2f, textureHeight / 2f, -10);
+        tempCamera.orthographicSize = textureHeight / 2f;        tempCamera.transform.position = new Vector3(finalTextureWidth / 2f, textureHeight / 2f, -10);
         
-        // Create a temporary canvas for proper GUI rendering
         GameObject canvasGO = new GameObject("TempCanvas");
         Canvas canvas = canvasGO.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
@@ -127,10 +108,8 @@ public class FontTextureGenerator : MonoBehaviour
         canvas.planeDistance = 1;
         
         CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(finalTextureWidth, textureHeight);
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;        scaler.referenceResolution = new Vector2(finalTextureWidth, textureHeight);
         
-        // Draw numbers 0-9 using UI Text components with spacing on both sides
         for (int i = 0; i < 10; i++)
         {
             GameObject textGO = new GameObject("Number" + i);
@@ -141,31 +120,24 @@ public class FontTextureGenerator : MonoBehaviour
             textComponent.font = loadedFont;
             textComponent.fontSize = fontSize;
             textComponent.color = textColor;
-            textComponent.alignment = TextAnchor.MiddleCenter;
-            
+            textComponent.alignment = TextAnchor.MiddleCenter;            
             RectTransform rectTransform = textGO.GetComponent<RectTransform>();
             
-            // Calculate position with spacing on both sides of each character
-            float totalCharWidthWithSpacing = charWidth + (characterSpacing * 2); // Left + Right spacing
-            float xPosition = (i * totalCharWidthWithSpacing) + characterSpacing; // Start position + left spacing
+            float totalCharWidthWithSpacing = charWidth + (characterSpacing * 2);
+            float xPosition = (i * totalCharWidthWithSpacing) + characterSpacing;
             
             rectTransform.anchorMin = new Vector2(0, 0);
             rectTransform.anchorMax = new Vector2(0, 1);
             rectTransform.anchoredPosition = new Vector2(xPosition + (charWidth / 2f), 0);
-            rectTransform.sizeDelta = new Vector2(charWidth, 0);
-        }
+            rectTransform.sizeDelta = new Vector2(charWidth, 0);        }
         
-        // Force canvas update
         Canvas.ForceUpdateCanvases();
         
-        // Render the camera
         tempCamera.Render();
         
-        // Read pixels from render texture
         texture.ReadPixels(new Rect(0, 0, finalTextureWidth, textureHeight), 0, 0);
         texture.Apply();
         
-        // Clean up
         RenderTexture.active = previousActive;
         DestroyImmediate(canvasGO);
         DestroyImmediate(tempCamera.gameObject);
@@ -174,11 +146,9 @@ public class FontTextureGenerator : MonoBehaviour
         return texture;
     }    private void SaveTexture(Texture2D texture)
     {
-        // 出力パスを結合（拡張子を自動追加）
         string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png");
         byte[] pngData = texture.EncodeToPNG();
 
-        // Ensure directory exists
         string directory = Path.GetDirectoryName(fullOutputPath);
         if (!Directory.Exists(directory))
         {
@@ -190,30 +160,21 @@ public class FontTextureGenerator : MonoBehaviour
 #if UNITY_EDITOR
         AssetDatabase.Refresh();
 #endif
-    }
-
-    // Alternative method using Canvas and Text component
-    private Texture2D CreateNumberTextureWithCanvas()
+    }    private Texture2D CreateNumberTextureWithCanvas()
     {
-        // Calculate final texture width with spacing on both sides of each character
-        int finalTextureWidth = baseTextureWidth + (characterSpacing * 20); // 10 characters * 2 sides each
+        int finalTextureWidth = baseTextureWidth + (characterSpacing * 20);
         
-        // Create temporary canvas
         GameObject canvasGO = new GameObject("TempCanvas");
         Canvas canvas = canvasGO.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.WorldSpace;
-        canvas.worldCamera = Camera.main;
+        canvas.renderMode = RenderMode.WorldSpace;        canvas.worldCamera = Camera.main;
         
-        // Create camera for rendering
         GameObject cameraGO = new GameObject("TempCamera");
         Camera renderCamera = cameraGO.AddComponent<Camera>();
         renderCamera.clearFlags = CameraClearFlags.SolidColor;
         renderCamera.backgroundColor = backgroundColor;
         renderCamera.orthographic = true;
-        renderCamera.orthographicSize = textureHeight / 2.0f;
-        renderCamera.targetTexture = new RenderTexture(finalTextureWidth, textureHeight, 24);
+        renderCamera.orthographicSize = textureHeight / 2.0f;        renderCamera.targetTexture = new RenderTexture(finalTextureWidth, textureHeight, 24);
         
-        // Create text objects for each number with spacing on both sides
         float charWidth = (float)baseTextureWidth / 10.0f;
         
         for (int i = 0; i < 10; i++)
@@ -226,27 +187,21 @@ public class FontTextureGenerator : MonoBehaviour
             textComponent.font = loadedFont;
             textComponent.fontSize = fontSize;
             textComponent.color = textColor;
-            textComponent.alignment = TextAnchor.MiddleCenter;
-            
+            textComponent.alignment = TextAnchor.MiddleCenter;            
             RectTransform rectTransform = textGO.GetComponent<RectTransform>();
             
-            // Calculate position with spacing on both sides of each character
-            float totalCharWidthWithSpacing = charWidth + (characterSpacing * 2); // Left + Right spacing
+            float totalCharWidthWithSpacing = charWidth + (characterSpacing * 2);
             float xPosition = (i * totalCharWidthWithSpacing) + characterSpacing + (charWidth / 2f) - (finalTextureWidth / 2f);
             rectTransform.anchoredPosition = new Vector2(xPosition, 0);
-            rectTransform.sizeDelta = new Vector2(charWidth, textureHeight);
-        }
+            rectTransform.sizeDelta = new Vector2(charWidth, textureHeight);        }
         
-        // Render to texture
         renderCamera.Render();
         
-        // Read pixels
         RenderTexture.active = renderCamera.targetTexture;
         Texture2D texture = new Texture2D(finalTextureWidth, textureHeight, TextureFormat.RGBA32, false);
         texture.ReadPixels(new Rect(0, 0, finalTextureWidth, textureHeight), 0, 0);
         texture.Apply();
         
-        // Clean up
         RenderTexture.active = null;
         DestroyImmediate(renderCamera.targetTexture);
         DestroyImmediate(cameraGO);
@@ -262,20 +217,15 @@ public class FontTextureGeneratorEditor : Editor
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
-        FontTextureGenerator generator = (FontTextureGenerator)target;
-
-        EditorGUILayout.Space(10);
+        FontTextureGenerator generator = (FontTextureGenerator)target;        EditorGUILayout.Space(10);
         
-        // Title with center alignment
         GUIStyle titleStyle = new GUIStyle(EditorStyles.boldLabel);
         titleStyle.fontSize = 24;
         titleStyle.alignment = TextAnchor.MiddleCenter;
         titleStyle.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
-        
-        EditorGUILayout.LabelField("Font Texture Generator", titleStyle);
+          EditorGUILayout.LabelField("Font Texture Generator", titleStyle);
         EditorGUILayout.Space(10);
 
-        // Font Settings
         DrawSection("Font Settings", () => {
             EditorGUI.BeginChangeCheck();
             Font newFontAsset = (Font)EditorGUILayout.ObjectField("Font Asset",
@@ -324,17 +274,13 @@ public class FontTextureGeneratorEditor : Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("textColor"), new GUIContent("Text Color"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("backgroundColor"), new GUIContent("Background Color"));        });
 
-        // Spacing Settings
         DrawSection("Spacing Settings", () => {
             EditorGUILayout.PropertyField(serializedObject.FindProperty("characterSpacing"), new GUIContent("Character Spacing (px)"));
         });
 
-        // Texture Settings
-        DrawSection("Texture Settings", () => {
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("baseTextureWidth"), new GUIContent("Base Width"));
+        DrawSection("Texture Settings", () => {            EditorGUILayout.PropertyField(serializedObject.FindProperty("baseTextureWidth"), new GUIContent("Base Width"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("textureHeight"), new GUIContent("Height"));
 
-            // Show calculated final width
             SerializedProperty baseWidthProp = serializedObject.FindProperty("baseTextureWidth");
             SerializedProperty spacingProp = serializedObject.FindProperty("characterSpacing");
             int finalWidth = baseWidthProp.intValue + (spacingProp.intValue * 20);
@@ -342,11 +288,7 @@ public class FontTextureGeneratorEditor : Editor
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.IntField("Final Width (calculated)", finalWidth);
             EditorGUI.EndDisabledGroup();
-        });
-
-        // Output Settings
-        DrawSection("Output Settings", () => {
-            // Output Folder D&D
+        });        DrawSection("Output Settings", () => {
             EditorGUI.BeginChangeCheck();
             DefaultAsset newOutputFolder = (DefaultAsset)EditorGUILayout.ObjectField("Output Folder",
                 serializedObject.FindProperty("outputFolder").objectReferenceValue,
@@ -367,9 +309,8 @@ public class FontTextureGeneratorEditor : Editor
                         EditorUtility.DisplayDialog("Invalid Folder", "Please select a valid folder.", "OK");
                         serializedObject.FindProperty("outputFolder").objectReferenceValue = null;
                     }
-                }
-                serializedObject.ApplyModifiedProperties();
-            }            // Show folder path (read-only if D&D folder is set)
+                }                serializedObject.ApplyModifiedProperties();
+            }            
             DefaultAsset currentOutputFolder = serializedObject.FindProperty("outputFolder").objectReferenceValue as DefaultAsset;
             if (currentOutputFolder != null)
             {
@@ -381,18 +322,14 @@ public class FontTextureGeneratorEditor : Editor
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("outputFolderPath"), new GUIContent("Folder Path"));
             }
+              EditorGUILayout.PropertyField(serializedObject.FindProperty("outputFileName"), new GUIContent("File Name (without extension)"));
             
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("outputFileName"), new GUIContent("File Name (without extension)"));
-            
-            // Show full output path
-            string fullPath = Path.Combine(serializedObject.FindProperty("outputFolderPath").stringValue, 
+            string fullPath = Path.Combine(serializedObject.FindProperty("outputFolderPath").stringValue,
                                          serializedObject.FindProperty("outputFileName").stringValue + ".png");
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.TextField("Full Output Path", fullPath);
-            EditorGUI.EndDisabledGroup();
-        });
+            EditorGUI.EndDisabledGroup();        });
 
-        // Preview Section
         DrawSection("Preview", () => {
             SerializedProperty textureProp = serializedObject.FindProperty("generatedTexture");
             if (textureProp.objectReferenceValue != null)
@@ -414,11 +351,8 @@ public class FontTextureGeneratorEditor : Editor
             }
         });
 
-        serializedObject.ApplyModifiedProperties();
+        serializedObject.ApplyModifiedProperties();        EditorGUILayout.Space(10);
 
-        EditorGUILayout.Space(10);
-
-        // Generate Button
         GUI.backgroundColor = Color.green;
         if (GUILayout.Button("Generate Number Texture", GUILayout.Height(40)))
         {
