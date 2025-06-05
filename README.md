@@ -1,6 +1,6 @@
 # Font2Texture
 
-フォントから数字Texture （0-9）を生成するcomponent
+任意のFontからTextureを生成するComponent
 
 ## クイックスタート
 
@@ -15,7 +15,7 @@
 
 3. **生成**
    - [ Generate Number Texture ]ボタンをクリック
-   - Texture がPNGとして保存されます
+   - Texture がPNGとして保存される
 
 ## 手動セットアップ
 
@@ -23,3 +23,7 @@ Componentを手動で追加する場合
 
 - 任意のGameObjectに`FontTextureGenerator`Componentを追加
 - Inspectorで設定を調整
+
+## 生成される画像の例
+![NumberTexture](https://github.com/user-attachments/assets/341bffcc-7286-4949-91b8-43a2f043a54a)
+使用フォント：[JetBrainsMono-Bold](https://www.jetbrains.com/ja-jp/lp/mono/)
