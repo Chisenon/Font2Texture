@@ -2,6 +2,9 @@
 
 任意のFontからTextureを生成するComponent
 
+![image](https://github.com/user-attachments/assets/883d7739-6024-485a-a0d5-f808ec239fd9)
+
+
 ## クイックスタート
 
 1. **prefabを使用（推奨）**
