@@ -7,8 +7,8 @@
 
 ## クイックスタート
 
-1. **prefabを使用（推奨）**
-   - `Font2Tex.prefab`をシーンにDrag & Drop
+1. **Prefabを使用**
+   - Packages/Chise - Font2Texture/`Font2Tex.prefab`をシーンにDrag & Drop
 
 2. **設定**
    - `Font Asset` : フォントファイルをドラッグ
@@ -18,13 +18,13 @@
 
 3. **生成**
    - [ Generate Number Texture ]ボタンをクリック
-   - Texture がPNGとして保存される
+   - Texture がPNGとして設定された場所に保存される
 
 ## 手動セットアップ
 
 Componentを手動で追加する場合
 
-- 任意のGameObjectに`FontTextureGenerator`Componentを追加
+- 任意のオブジェクト(EmptyObjectとか)に`ChiseNote/Font Texture Generator`ComponentをAttach
 - Inspectorで設定を調整
 
 ## 生成される画像の例
