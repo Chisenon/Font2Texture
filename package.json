@@ -1,0 +1,16 @@
+{
+    "name" : "net.chisenon.font2tex",
+    "displayName" : "Chise - Font2Texture",
+    "version" : "1.0.0",
+    "author": {
+      "name": "Chisenon",
+      "url":"https://github.com/chisenon"
+    },
+    "unity" : "2019.4",
+    "description" : "Generate Texture Sheets from any Font",
+    "vpmDependencies" : {
+    },
+    "legacyFolders" : {
+      "Assets\\!_ChiseNote\\Font2Texture": ""
+    }
+}
