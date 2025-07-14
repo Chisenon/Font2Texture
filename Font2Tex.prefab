@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7442205810795747466}
-  - component: {fileID: 673816837622973504}
+  - component: {fileID: 1575212639224100023}
   m_Layer: 0
   m_Name: Font2Tex
   m_TagString: Untagged
@@ -32,7 +32,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &673816837622973504
+--- !u!114 &1575212639224100023
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,7 +41,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8460119729797591954}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 684233cca82585b41b7af80475a6e7f9, type: 3}
+  m_Script: {fileID: 11500000, guid: 3d3d4a4191c53504e94125c15d38c307, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   fontAsset: {fileID: 0}
