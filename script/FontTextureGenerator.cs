@@ -21,7 +21,9 @@ public class FontTextureGenerator : MonoBehaviour
     [Header("Texture Settings")]
     [SerializeField] private int baseTextureWidth = 1280;
     [SerializeField] private int textureHeight = 256;
-    [SerializeField] private DefaultAsset outputFolder;
+    #if UNITY_EDITOR
+    [SerializeField] private UnityEditor.DefaultAsset outputFolder;
+    #endif
     [SerializeField] private string outputFolderPath = "Assets/Textures";
     [SerializeField] private string outputFileName = "NumberTexture";
 
@@ -33,13 +35,15 @@ public class FontTextureGenerator : MonoBehaviour
     [ContextMenu("Generate Number Texture")]
     public void GenerateNumberTexture()
     {
+        #if UNITY_EDITOR
         if (!LoadFont())
         {
             Debug.LogError("Failed to load font from: " + fontPath);
             return;
         }
 
-        Texture2D texture = CreateNumberTexture();        if (texture != null)
+        Texture2D texture = CreateNumberTexture();
+        if (texture != null)
         {
             generatedTexture = texture;
             SaveTexture(texture);
@@ -50,8 +54,12 @@ public class FontTextureGenerator : MonoBehaviour
         {
             Debug.LogError("Failed to generate number texture");
         }
+        #else
+        Debug.LogWarning("FontTextureGenerator: This feature is only available in the Unity Editor.");
+        #endif
     }    private bool LoadFont()
     {
+#if UNITY_EDITOR
         if (fontAsset != null)
         {
             loadedFont = fontAsset;
@@ -69,14 +77,16 @@ public class FontTextureGenerator : MonoBehaviour
 
         if (loadedFont == null)
         {
-#if UNITY_EDITOR
             loadedFont = AssetDatabase.LoadAssetAtPath<Font>(fontPath);
-#endif
         }
 
         return loadedFont != null;
+#else
+        return false;
+#endif
     }    private Texture2D CreateNumberTexture()
     {
+#if UNITY_EDITOR
         int finalTextureWidth = baseTextureWidth + (characterSpacing * 20);
         
         RenderTexture renderTexture = new RenderTexture(finalTextureWidth, textureHeight, 24);
@@ -144,8 +154,12 @@ public class FontTextureGenerator : MonoBehaviour
         DestroyImmediate(renderTexture);
         
         return texture;
+#else
+        return null;
+#endif
     }    private void SaveTexture(Texture2D texture)
     {
+#if UNITY_EDITOR
         string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png");
         byte[] pngData = texture.EncodeToPNG();
 
@@ -157,11 +171,11 @@ public class FontTextureGenerator : MonoBehaviour
 
         File.WriteAllBytes(fullOutputPath, pngData);
 
-#if UNITY_EDITOR
         AssetDatabase.Refresh();
 #endif
     }    private Texture2D CreateNumberTextureWithCanvas()
     {
+#if UNITY_EDITOR
         int finalTextureWidth = baseTextureWidth + (characterSpacing * 20);
         
         GameObject canvasGO = new GameObject("TempCanvas");
@@ -208,8 +222,12 @@ public class FontTextureGenerator : MonoBehaviour
         DestroyImmediate(canvasGO);
         
         return texture;
+#else
+        return null;
+#endif
     }
 }
+
 #if UNITY_EDITOR
 [CustomEditor(typeof(FontTextureGenerator))]
 public class FontTextureGeneratorEditor : Editor
