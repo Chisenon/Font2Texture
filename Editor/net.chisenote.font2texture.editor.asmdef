@@ -1,0 +1,18 @@
+{
+    "name": "net.chisenote.font2texture.editor",
+    "rootNamespace": "ChiseNote.Font2Texture.Editor",
+    "references": [
+        "net.chisenote.font2texture.runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
