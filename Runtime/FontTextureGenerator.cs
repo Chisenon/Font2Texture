@@ -17,11 +17,7 @@ namespace ChiseNote.Font2Texture.Runtime
         [SerializeField] private int fontSize = 128;
         [SerializeField] private Color textColor = Color.white;
         [SerializeField] private Color backgroundColor = Color.clear;
-
-        [Header("Spacing Settings")]
         [SerializeField] private int characterSpacing = 0;
-
-        [Header("Texture Settings")]
         [SerializeField] private int baseTextureWidth = 1280;
         [SerializeField] private int textureHeight = 256;
 #if UNITY_EDITOR
@@ -245,8 +241,6 @@ namespace ChiseNote.Font2Texture.Runtime
             return null;
 #endif
         }
-
-        // Public properties for Editor access
         public Font FontAsset
         {
             get { return fontAsset; }
