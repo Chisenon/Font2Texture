@@ -5,7 +5,7 @@ using ChiseNote.Font2Texture.Runtime;
 
 namespace ChiseNote.Font2Texture.Editor
 {
-    [CustomEditor(typeof(FontTextureGenerator))]
+    [CustomEditor(typeof(ChiseNote.Font2Texture.Runtime.FontTextureGenerator))]
     public class FontTextureGeneratorEditor : UnityEditor.Editor
     {
         private static readonly Color SECTION_LEFT_COLOR = new Color32(0xB8, 0x2C, 0x2C, 0xFF);
@@ -16,8 +16,8 @@ namespace ChiseNote.Font2Texture.Editor
         private const int SUBTITLE_VERTICAL_OFFSET = 28;
         private const int BUTTON_HEIGHT = 40;
         private const int PREVIEW_MARGIN = 40;
-    private const int NUM_CHARACTERS = 10;
-    private const int SPACING_SIDES = 2;
+        private const int NUM_CHARACTERS = 10;
+        private const int SPACING_SIDES = 2;
         private static GUIStyle _bannerStyle;
         private static GUIStyle _subTitleStyle;
         private static GUIStyle _sectionTitleStyle;
@@ -53,7 +53,7 @@ namespace ChiseNote.Font2Texture.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            var generator = (FontTextureGenerator)target;
+            var generator = (ChiseNote.Font2Texture.Runtime.FontTextureGenerator)target;
 
             InitializeStyles();
             DrawTitleHeader();
