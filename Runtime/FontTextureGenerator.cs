@@ -17,11 +17,7 @@ namespace ChiseNote.Font2Texture.Runtime
         [SerializeField] private int fontSize = 128;
         [SerializeField] private Color textColor = Color.white;
         [SerializeField] private Color backgroundColor = Color.clear;
-
-        [Header("Spacing Settings")]
         [SerializeField] private int characterSpacing = 0;
-
-        [Header("Texture Settings")]
         [SerializeField] private int baseTextureWidth = 1280;
         [SerializeField] private int textureHeight = 256;
 #if UNITY_EDITOR
@@ -34,6 +30,8 @@ namespace ChiseNote.Font2Texture.Runtime
         [SerializeField] private Texture2D generatedTexture;
 
         private Font loadedFont;
+    private const int NUM_CHARACTERS = 10;
+    private const int SPACING_SIDES = 2;
 
         [ContextMenu("Generate Number Texture")]
         public void GenerateNumberTexture()
@@ -94,7 +92,7 @@ namespace ChiseNote.Font2Texture.Runtime
         private Texture2D CreateNumberTexture()
         {
 #if UNITY_EDITOR
-            int finalTextureWidth = baseTextureWidth + (characterSpacing * 20);
+            int finalTextureWidth = baseTextureWidth + (characterSpacing * NUM_CHARACTERS * SPACING_SIDES);
 
             RenderTexture renderTexture = new RenderTexture(finalTextureWidth, textureHeight, 24);
             RenderTexture previousActive = RenderTexture.active;
@@ -191,7 +189,7 @@ namespace ChiseNote.Font2Texture.Runtime
         private Texture2D CreateNumberTextureWithCanvas()
         {
 #if UNITY_EDITOR
-            int finalTextureWidth = baseTextureWidth + (characterSpacing * 20);
+            int finalTextureWidth = baseTextureWidth + (characterSpacing * NUM_CHARACTERS * SPACING_SIDES);
 
             GameObject canvasGO = new GameObject("TempCanvas");
             Canvas canvas = canvasGO.AddComponent<Canvas>();
@@ -245,8 +243,6 @@ namespace ChiseNote.Font2Texture.Runtime
             return null;
 #endif
         }
-
-        // Public properties for Editor access
         public Font FontAsset
         {
             get { return fontAsset; }
