@@ -30,6 +30,8 @@ namespace ChiseNote.Font2Texture.Runtime
         [SerializeField] private Texture2D generatedTexture;
 
         private Font loadedFont;
+    private const int NUM_CHARACTERS = 10;
+    private const int SPACING_SIDES = 2;
 
         [ContextMenu("Generate Number Texture")]
         public void GenerateNumberTexture()
@@ -90,7 +92,7 @@ namespace ChiseNote.Font2Texture.Runtime
         private Texture2D CreateNumberTexture()
         {
 #if UNITY_EDITOR
-            int finalTextureWidth = baseTextureWidth + (characterSpacing * 20);
+            int finalTextureWidth = baseTextureWidth + (characterSpacing * NUM_CHARACTERS * SPACING_SIDES);
 
             RenderTexture renderTexture = new RenderTexture(finalTextureWidth, textureHeight, 24);
             RenderTexture previousActive = RenderTexture.active;
@@ -187,7 +189,7 @@ namespace ChiseNote.Font2Texture.Runtime
         private Texture2D CreateNumberTextureWithCanvas()
         {
 #if UNITY_EDITOR
-            int finalTextureWidth = baseTextureWidth + (characterSpacing * 20);
+            int finalTextureWidth = baseTextureWidth + (characterSpacing * NUM_CHARACTERS * SPACING_SIDES);
 
             GameObject canvasGO = new GameObject("TempCanvas");
             Canvas canvas = canvasGO.AddComponent<Canvas>();

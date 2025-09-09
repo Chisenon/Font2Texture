@@ -16,6 +16,8 @@ namespace ChiseNote.Font2Texture.Editor
         private const int SUBTITLE_VERTICAL_OFFSET = 28;
         private const int BUTTON_HEIGHT = 40;
         private const int PREVIEW_MARGIN = 40;
+    private const int NUM_CHARACTERS = 10;
+    private const int SPACING_SIDES = 2;
         private static GUIStyle _bannerStyle;
         private static GUIStyle _subTitleStyle;
         private static GUIStyle _sectionTitleStyle;
@@ -136,7 +138,7 @@ namespace ChiseNote.Font2Texture.Editor
             EditorGUILayout.PropertyField(_baseTextureWidthProp, new GUIContent("Width"));
             EditorGUILayout.PropertyField(_textureHeightProp, new GUIContent("Height"));
 
-            int finalWidth = _baseTextureWidthProp.intValue + (_characterSpacingProp.intValue * 20);
+            int finalWidth = _baseTextureWidthProp.intValue + (_characterSpacingProp.intValue * NUM_CHARACTERS * SPACING_SIDES);
 
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.IntField("Final Width", finalWidth);
