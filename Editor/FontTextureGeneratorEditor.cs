@@ -36,6 +36,11 @@ namespace ChiseNote.Font2Texture.Editor
 
         private void OnEnable()
         {
+            if (target == null)
+            {
+                return;
+            }
+
             _fontAssetProp = serializedObject.FindProperty("fontAsset");
             _fontPathProp = serializedObject.FindProperty("fontPath");
             _fontSizeProp = serializedObject.FindProperty("fontSize");
