@@ -37,6 +37,15 @@ namespace ChiseNote.Font2Texture.Runtime
         public void GenerateNumberTexture()
         {
 #if UNITY_EDITOR
+            if (outputFolder == null)
+            {
+                if (string.IsNullOrEmpty(outputFolderPath))
+                {
+                    outputFolderPath = "Assets/Textures";
+                }
+                outputFolder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(outputFolderPath);
+            }
+
             if (!LoadFont())
             {
                 Debug.LogError("Failed to load font from: " + fontPath);
@@ -48,8 +57,14 @@ namespace ChiseNote.Font2Texture.Runtime
             {
                 generatedTexture = texture;
                 SaveTexture(texture);
-                string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png");
+                string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png").Replace("\\", "/");
                 Debug.Log("Number texture generated successfully at: " + fullOutputPath);
+
+                UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(fullOutputPath);
+                if (obj != null)
+                {
+                    EditorGUIUtility.PingObject(obj);
+                }
             }
             else
             {
@@ -69,21 +84,14 @@ namespace ChiseNote.Font2Texture.Runtime
                 return true;
             }
 
-            if (!File.Exists(fontPath))
+            loadedFont = AssetDatabase.LoadAssetAtPath<Font>(fontPath);
+            if (loadedFont == null)
             {
-                Debug.LogError("Font file not found: " + fontPath);
+                Debug.LogError("Font not found. Please assign a font in Target Font field.");
                 return false;
             }
 
-            string resourcePath = fontPath.Replace("Assets/Resources/", "").Replace(".ttf", "");
-            loadedFont = Resources.Load<Font>(resourcePath);
-
-            if (loadedFont == null)
-            {
-                loadedFont = AssetDatabase.LoadAssetAtPath<Font>(fontPath);
-            }
-
-            return loadedFont != null;
+            return true;
 #else
             return false;
 #endif
@@ -101,23 +109,21 @@ namespace ChiseNote.Font2Texture.Runtime
             GL.Clear(true, true, backgroundColor);
 
             Texture2D texture = new Texture2D(finalTextureWidth, textureHeight, TextureFormat.RGBA32, false);
-
             float charWidth = (float)baseTextureWidth / 10.0f;
-            GUIStyle textStyle = new GUIStyle();
-            textStyle.font = loadedFont;
-            textStyle.fontSize = fontSize;
-            textStyle.normal.textColor = textColor;
-            textStyle.alignment = TextAnchor.MiddleCenter;
+
+            int renderLayer = 5;
 
             Camera tempCamera = new GameObject("TempCamera").AddComponent<Camera>();
+            tempCamera.cullingMask = 1 << renderLayer;
             tempCamera.targetTexture = renderTexture;
             tempCamera.clearFlags = CameraClearFlags.SolidColor;
             tempCamera.backgroundColor = backgroundColor;
             tempCamera.orthographic = true;
             tempCamera.orthographicSize = textureHeight / 2f;
-            tempCamera.transform.position = new Vector3(finalTextureWidth / 2f, textureHeight / 2f, -10);
+            tempCamera.transform.position = new Vector3(finalTextureWidth / 2f + 50000f, textureHeight / 2f + 50000f, -10);
 
             GameObject canvasGO = new GameObject("TempCanvas");
+            canvasGO.layer = renderLayer;
             Canvas canvas = canvasGO.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = tempCamera;
@@ -130,6 +136,7 @@ namespace ChiseNote.Font2Texture.Runtime
             for (int i = 0; i < 10; i++)
             {
                 GameObject textGO = new GameObject("Number" + i);
+                textGO.layer = renderLayer;
                 textGO.transform.SetParent(canvasGO.transform, false);
 
                 Text textComponent = textGO.AddComponent<Text>();
@@ -171,7 +178,7 @@ namespace ChiseNote.Font2Texture.Runtime
         private void SaveTexture(Texture2D texture)
         {
 #if UNITY_EDITOR
-            string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png");
+            string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png").Replace("\\", "/");
             byte[] pngData = texture.EncodeToPNG();
 
             string directory = Path.GetDirectoryName(fullOutputPath);
@@ -183,95 +190,16 @@ namespace ChiseNote.Font2Texture.Runtime
             File.WriteAllBytes(fullOutputPath, pngData);
 
             AssetDatabase.Refresh();
-#endif
-        }
 
-        private Texture2D CreateNumberTextureWithCanvas()
-        {
-#if UNITY_EDITOR
-            int finalTextureWidth = baseTextureWidth + (characterSpacing * NUM_CHARACTERS * SPACING_SIDES);
-
-            GameObject canvasGO = new GameObject("TempCanvas");
-            Canvas canvas = canvasGO.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.WorldSpace;
-            canvas.worldCamera = Camera.main;
-
-            GameObject cameraGO = new GameObject("TempCamera");
-            Camera renderCamera = cameraGO.AddComponent<Camera>();
-            renderCamera.clearFlags = CameraClearFlags.SolidColor;
-            renderCamera.backgroundColor = backgroundColor;
-            renderCamera.orthographic = true;
-            renderCamera.orthographicSize = textureHeight / 2.0f;
-            renderCamera.targetTexture = new RenderTexture(finalTextureWidth, textureHeight, 24);
-
-            float charWidth = (float)baseTextureWidth / 10.0f;
-
-            for (int i = 0; i < 10; i++)
+            TextureImporter importer = AssetImporter.GetAtPath(fullOutputPath) as TextureImporter;
+            if (importer != null)
             {
-                GameObject textGO = new GameObject("Number" + i);
-                textGO.transform.SetParent(canvasGO.transform);
-
-                Text textComponent = textGO.AddComponent<Text>();
-                textComponent.text = i.ToString();
-                textComponent.font = loadedFont;
-                textComponent.fontSize = fontSize;
-                textComponent.color = textColor;
-                textComponent.alignment = TextAnchor.MiddleCenter;
-
-                RectTransform rectTransform = textGO.GetComponent<RectTransform>();
-
-                float totalCharWidthWithSpacing = charWidth + (characterSpacing * 2);
-                float xPosition = (i * totalCharWidthWithSpacing) + characterSpacing + (charWidth / 2f) - (finalTextureWidth / 2f);
-                rectTransform.anchoredPosition = new Vector2(xPosition, 0);
-                rectTransform.sizeDelta = new Vector2(charWidth, textureHeight);
+                importer.mipmapEnabled = true;
+                importer.streamingMipmaps = true;
+                importer.textureType = TextureImporterType.Default;
+                importer.SaveAndReimport();
             }
-
-            renderCamera.Render();
-
-            RenderTexture.active = renderCamera.targetTexture;
-            Texture2D texture = new Texture2D(finalTextureWidth, textureHeight, TextureFormat.RGBA32, false);
-            texture.ReadPixels(new Rect(0, 0, finalTextureWidth, textureHeight), 0, 0);
-            texture.Apply();
-
-            RenderTexture.active = null;
-            DestroyImmediate(renderCamera.targetTexture);
-            DestroyImmediate(cameraGO);
-            DestroyImmediate(canvasGO);
-
-            return texture;
-#else
-            return null;
 #endif
-        }
-        public Font FontAsset
-        {
-            get { return fontAsset; }
-            set { fontAsset = value; }
-        }
-
-        public string FontPath
-        {
-            get { return fontPath; }
-            set { fontPath = value; }
-        }
-
-        public Texture2D GeneratedTexture
-        {
-            get { return generatedTexture; }
-        }
-
-#if UNITY_EDITOR
-        public UnityEditor.DefaultAsset OutputFolder
-        {
-            get { return outputFolder; }
-            set { outputFolder = value; }
-        }
-#endif
-
-        public string OutputFolderPath
-        {
-            get { return outputFolderPath; }
-            set { outputFolderPath = value; }
         }
     }
 }
