@@ -111,6 +111,8 @@ namespace ChiseNote.Font2Texture.Runtime
             Texture2D texture = new Texture2D(finalTextureWidth, textureHeight, TextureFormat.RGBA32, false);
             float charWidth = (float)baseTextureWidth / 10.0f;
 
+            int renderLayer = 5;
+
             Camera tempCamera = new GameObject("TempCamera").AddComponent<Camera>();
             tempCamera.cullingMask = 1 << renderLayer;
             tempCamera.targetTexture = renderTexture;
