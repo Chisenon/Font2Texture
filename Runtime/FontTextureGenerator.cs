@@ -43,13 +43,6 @@ namespace ChiseNote.Font2Texture.Runtime
                 {
                     outputFolderPath = "Assets/Textures";
                 }
-
-                if (!Directory.Exists(outputFolderPath))
-                {
-                    Directory.CreateDirectory(outputFolderPath);
-                    AssetDatabase.Refresh();
-                }
-
                 outputFolder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(outputFolderPath);
             }
 
@@ -91,18 +84,14 @@ namespace ChiseNote.Font2Texture.Runtime
                 return true;
             }
 
-            if (!File.Exists(fontPath))
+            loadedFont = AssetDatabase.LoadAssetAtPath<Font>(fontPath);
+            if (loadedFont == null)
             {
-                Debug.LogError("Font file not found: " + fontPath);
+                Debug.LogError("Font not found. Please assign a font in Target Font field.");
                 return false;
             }
 
-            if (loadedFont == null)
-            {
-                loadedFont = AssetDatabase.LoadAssetAtPath<Font>(fontPath);
-            }
-
-            return loadedFont != null;
+            return true;
 #else
             return false;
 #endif
@@ -120,13 +109,7 @@ namespace ChiseNote.Font2Texture.Runtime
             GL.Clear(true, true, backgroundColor);
 
             Texture2D texture = new Texture2D(finalTextureWidth, textureHeight, TextureFormat.RGBA32, false);
-
             float charWidth = (float)baseTextureWidth / 10.0f;
-            GUIStyle textStyle = new GUIStyle();
-            textStyle.font = loadedFont;
-            textStyle.fontSize = fontSize;
-            textStyle.normal.textColor = textColor;
-            textStyle.alignment = TextAnchor.MiddleCenter;
 
             Camera tempCamera = new GameObject("TempCamera").AddComponent<Camera>();
             tempCamera.targetTexture = renderTexture;
@@ -202,8 +185,16 @@ namespace ChiseNote.Font2Texture.Runtime
             File.WriteAllBytes(fullOutputPath, pngData);
 
             AssetDatabase.Refresh();
+
+            TextureImporter importer = AssetImporter.GetAtPath(fullOutputPath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.mipmapEnabled = true;
+                importer.streamingMipmaps = true;
+                importer.textureType = TextureImporterType.Default;
+                importer.SaveAndReimport();
+            }
 #endif
         }
-
-        private Texture2D CreateNumberTextureWithCanvas()
-        {
+    }
+}
