@@ -97,9 +97,6 @@ namespace ChiseNote.Font2Texture.Runtime
                 return false;
             }
 
-            string resourcePath = fontPath.Replace("Assets/Resources/", "").Replace(".ttf", "");
-            loadedFont = Resources.Load<Font>(resourcePath);
-
             if (loadedFont == null)
             {
                 loadedFont = AssetDatabase.LoadAssetAtPath<Font>(fontPath);
@@ -210,90 +207,3 @@ namespace ChiseNote.Font2Texture.Runtime
 
         private Texture2D CreateNumberTextureWithCanvas()
         {
-#if UNITY_EDITOR
-            int finalTextureWidth = baseTextureWidth + (characterSpacing * NUM_CHARACTERS * SPACING_SIDES);
-
-            GameObject canvasGO = new GameObject("TempCanvas");
-            Canvas canvas = canvasGO.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.WorldSpace;
-            canvas.worldCamera = Camera.main;
-
-            GameObject cameraGO = new GameObject("TempCamera");
-            Camera renderCamera = cameraGO.AddComponent<Camera>();
-            renderCamera.clearFlags = CameraClearFlags.SolidColor;
-            renderCamera.backgroundColor = backgroundColor;
-            renderCamera.orthographic = true;
-            renderCamera.orthographicSize = textureHeight / 2.0f;
-            renderCamera.targetTexture = new RenderTexture(finalTextureWidth, textureHeight, 24);
-
-            float charWidth = (float)baseTextureWidth / 10.0f;
-
-            for (int i = 0; i < 10; i++)
-            {
-                GameObject textGO = new GameObject("Number" + i);
-                textGO.transform.SetParent(canvasGO.transform);
-
-                Text textComponent = textGO.AddComponent<Text>();
-                textComponent.text = i.ToString();
-                textComponent.font = loadedFont;
-                textComponent.fontSize = fontSize;
-                textComponent.color = textColor;
-                textComponent.alignment = TextAnchor.MiddleCenter;
-
-                RectTransform rectTransform = textGO.GetComponent<RectTransform>();
-
-                float totalCharWidthWithSpacing = charWidth + (characterSpacing * 2);
-                float xPosition = (i * totalCharWidthWithSpacing) + characterSpacing + (charWidth / 2f) - (finalTextureWidth / 2f);
-                rectTransform.anchoredPosition = new Vector2(xPosition, 0);
-                rectTransform.sizeDelta = new Vector2(charWidth, textureHeight);
-            }
-
-            renderCamera.Render();
-
-            RenderTexture.active = renderCamera.targetTexture;
-            Texture2D texture = new Texture2D(finalTextureWidth, textureHeight, TextureFormat.RGBA32, false);
-            texture.ReadPixels(new Rect(0, 0, finalTextureWidth, textureHeight), 0, 0);
-            texture.Apply();
-
-            RenderTexture.active = null;
-            DestroyImmediate(renderCamera.targetTexture);
-            DestroyImmediate(cameraGO);
-            DestroyImmediate(canvasGO);
-
-            return texture;
-#else
-            return null;
-#endif
-        }
-        public Font FontAsset
-        {
-            get { return fontAsset; }
-            set { fontAsset = value; }
-        }
-
-        public string FontPath
-        {
-            get { return fontPath; }
-            set { fontPath = value; }
-        }
-
-        public Texture2D GeneratedTexture
-        {
-            get { return generatedTexture; }
-        }
-
-#if UNITY_EDITOR
-        public UnityEditor.DefaultAsset OutputFolder
-        {
-            get { return outputFolder; }
-            set { outputFolder = value; }
-        }
-#endif
-
-        public string OutputFolderPath
-        {
-            get { return outputFolderPath; }
-            set { outputFolderPath = value; }
-        }
-    }
-}
