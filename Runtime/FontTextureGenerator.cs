@@ -112,14 +112,16 @@ namespace ChiseNote.Font2Texture.Runtime
             float charWidth = (float)baseTextureWidth / 10.0f;
 
             Camera tempCamera = new GameObject("TempCamera").AddComponent<Camera>();
+            tempCamera.cullingMask = 1 << renderLayer;
             tempCamera.targetTexture = renderTexture;
             tempCamera.clearFlags = CameraClearFlags.SolidColor;
             tempCamera.backgroundColor = backgroundColor;
             tempCamera.orthographic = true;
             tempCamera.orthographicSize = textureHeight / 2f;
-            tempCamera.transform.position = new Vector3(finalTextureWidth / 2f, textureHeight / 2f, -10);
+            tempCamera.transform.position = new Vector3(finalTextureWidth / 2f + 50000f, textureHeight / 2f + 50000f, -10);
 
             GameObject canvasGO = new GameObject("TempCanvas");
+            canvasGO.layer = renderLayer;
             Canvas canvas = canvasGO.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = tempCamera;
@@ -132,6 +134,7 @@ namespace ChiseNote.Font2Texture.Runtime
             for (int i = 0; i < 10; i++)
             {
                 GameObject textGO = new GameObject("Number" + i);
+                textGO.layer = renderLayer;
                 textGO.transform.SetParent(canvasGO.transform, false);
 
                 Text textComponent = textGO.AddComponent<Text>();
