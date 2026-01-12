@@ -22,7 +22,6 @@ namespace ChiseNote.Font2Texture.Editor
         private static GUIStyle _subTitleStyle;
         private static GUIStyle _sectionTitleStyle;
         private SerializedProperty _fontAssetProp;
-        private SerializedProperty _fontPathProp;
         private SerializedProperty _fontSizeProp;
         private SerializedProperty _textColorProp;
         private SerializedProperty _backgroundColorProp;
@@ -42,7 +41,6 @@ namespace ChiseNote.Font2Texture.Editor
             }
 
             _fontAssetProp = serializedObject.FindProperty("fontAsset");
-            _fontPathProp = serializedObject.FindProperty("fontPath");
             _fontSizeProp = serializedObject.FindProperty("fontSize");
             _textColorProp = serializedObject.FindProperty("textColor");
             _backgroundColorProp = serializedObject.FindProperty("backgroundColor");
@@ -116,10 +114,6 @@ namespace ChiseNote.Font2Texture.Editor
             if (EditorGUI.EndChangeCheck())
             {
                 _fontAssetProp.objectReferenceValue = newFont;
-                if (newFont != null)
-                {
-                    _fontPathProp.stringValue = AssetDatabase.GetAssetPath(newFont);
-                }
             }
 
             var currentFont = _fontAssetProp.objectReferenceValue as Font;
@@ -178,7 +172,7 @@ namespace ChiseNote.Font2Texture.Editor
             string fileName = _outputFileNameProp.stringValue;
             if (!string.IsNullOrEmpty(outputPath) && !string.IsNullOrEmpty(fileName))
             {
-                string fullPath = Path.Combine(outputPath, fileName + ".png");
+                string fullPath = Path.Combine(outputPath, fileName + ".png").Replace("\\", "/");
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUILayout.TextField("Full Output Path", fullPath);
                 EditorGUI.EndDisabledGroup();
