@@ -37,6 +37,22 @@ namespace ChiseNote.Font2Texture.Runtime
         public void GenerateNumberTexture()
         {
 #if UNITY_EDITOR
+            if (outputFolder == null)
+            {
+                if (string.IsNullOrEmpty(outputFolderPath))
+                {
+                    outputFolderPath = "Assets/Textures";
+                }
+
+                if (!Directory.Exists(outputFolderPath))
+                {
+                    Directory.CreateDirectory(outputFolderPath);
+                    AssetDatabase.Refresh();
+                }
+
+                outputFolder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(outputFolderPath);
+            }
+
             if (!LoadFont())
             {
                 Debug.LogError("Failed to load font from: " + fontPath);
@@ -48,8 +64,14 @@ namespace ChiseNote.Font2Texture.Runtime
             {
                 generatedTexture = texture;
                 SaveTexture(texture);
-                string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png");
+                string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png").Replace("\\", "/");
                 Debug.Log("Number texture generated successfully at: " + fullOutputPath);
+
+                UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(fullOutputPath);
+                if (obj != null)
+                {
+                    EditorGUIUtility.PingObject(obj);
+                }
             }
             else
             {
@@ -171,7 +193,7 @@ namespace ChiseNote.Font2Texture.Runtime
         private void SaveTexture(Texture2D texture)
         {
 #if UNITY_EDITOR
-            string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png");
+            string fullOutputPath = Path.Combine(outputFolderPath, outputFileName + ".png").Replace("\\", "/");
             byte[] pngData = texture.EncodeToPNG();
 
             string directory = Path.GetDirectoryName(fullOutputPath);

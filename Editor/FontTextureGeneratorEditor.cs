@@ -178,7 +178,7 @@ namespace ChiseNote.Font2Texture.Editor
             string fileName = _outputFileNameProp.stringValue;
             if (!string.IsNullOrEmpty(outputPath) && !string.IsNullOrEmpty(fileName))
             {
-                string fullPath = Path.Combine(outputPath, fileName + ".png");
+                string fullPath = Path.Combine(outputPath, fileName + ".png").Replace("\\", "/");
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUILayout.TextField("Full Output Path", fullPath);
                 EditorGUI.EndDisabledGroup();
